@@ -1,9 +1,9 @@
 use structopt::StructOpt;
-
-mod lib;
-use lib::{run, Args};
+extern crate stomper;
 
 fn main() {
-    let args = Args::from_args();
-    run(&args);
+    let args = stomper::args::Args::from_args();
+    if let Err(e) = stomper::run(&args) {
+        eprintln!("An error has occurred: {}", e);
+    }
 }

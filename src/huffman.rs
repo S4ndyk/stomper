@@ -1,5 +1,9 @@
 use std::fs::File;
 
-pub fn compress(input: &File, mut output: &File) {}
+pub struct Huffman;
 
-pub fn decompress(input: &File, mut output: &File) {}
+impl super::Compressor for Huffman {
+    fn compress(mut input: &File, output: &Option<String>) {}
+
+    fn decompress(mut input: &File, output: &Option<String>) {}
+}

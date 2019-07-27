@@ -1,20 +1,40 @@
-use std::path::PathBuf;
-use structopt::StructOpt;
+pub mod args;
+use std::error;
+use std::fs::File;
+use std::io::Error;
+use std::io::ErrorKind;
+mod huffman;
+mod lzw;
+use args::Args;
+use huffman::Huffman;
+use lzw::LZW;
 
-pub fn run(args: &Args) {}
+pub fn run(args: &Args) -> Result<(), Box<dyn error::Error>> {
+    let input = File::open(&args.input)?;
+    let output = &args.output;
 
-#[derive(StructOpt, Debug)]
-pub struct Args {
-    #[structopt(short, long)]
-    ///Pass when decompressing
-    pub decompress: bool,
+    //This is a very ugly temporary solution
+    match args.compressor.as_str() {
+        "lzw" => {
+            if args.decompress {
+                LZW::decompress(&input, output)
+            } else {
+                LZW::compress(&input, output)
+            }
+        }
+        "huff" | "huffman" => {
+            if args.decompress {
+                Huffman::decompress(&input, output)
+            } else {
+                Huffman::compress(&input, output)
+            }
+        }
+        _ => eprintln!("Invalid compression type!"),
+    };
+    Ok(())
+}
 
-    ///Defines type of compression:`lzw` or `huff`
-    pub compressor: String,
-
-    #[structopt(parse(from_os_str))]
-    pub input: PathBuf,
-
-    #[structopt(parse(from_os_str), short, long)]
-    pub output: Option<PathBuf>,
+pub trait Compressor {
+    fn compress(input: &File, output: &Option<String>);
+    fn decompress(input: &File, output: &Option<String>);
 }

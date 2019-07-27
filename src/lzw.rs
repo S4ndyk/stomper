@@ -1,5 +1,9 @@
 use std::fs::File;
 
-pub fn compress(input: &File, mut output: &File) {}
+pub struct LZW;
 
-pub fn decompress(input: &File, mut output: &File) {}
+impl super::Compressor for LZW {
+    fn compress(input: &File, output: &Option<String>) {}
+
+    fn decompress(input: &File, output: &Option<String>) {}
+}
