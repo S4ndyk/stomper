@@ -1,8 +1,6 @@
 pub mod args;
 use std::error;
 use std::fs::File;
-use std::io::Error;
-use std::io::ErrorKind;
 mod huffman;
 mod lzw;
 use args::Args;
