@@ -1,18 +1,26 @@
+use super::{huffman::Huffman, lzw::LZW, Compressor};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt)]
 pub struct Args {
     #[structopt(short, long)]
-    ///Pass when decompressing
     pub decompress: bool,
 
-    ///Defines type of compression:`lzw` or `huff`
-    pub compressor: String,
+    #[structopt(parse(try_from_str = "parse_compressor"))]
+    pub compressor: Box<dyn Compressor>,
 
     #[structopt(parse(from_os_str))]
     pub input: PathBuf,
 
     #[structopt(short, long)]
     pub output: Option<String>,
+}
+
+fn parse_compressor(src: &str) -> Result<Box<dyn Compressor>, String> {
+    match src {
+        "lzw" => Ok(Box::new(LZW)),
+        "huff" => Ok(Box::new(Huffman)),
+        s => Err(format!("invalid compression type '{}'", s)),
+    }
 }
