@@ -1,6 +1,18 @@
-use super::{huffman::Huffman, lzw::LZW, Compressor};
+use std::error;
+use std::fs::File;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use libstomper::{lzw::LZW, huffman::Huffman, Compressor};
+
+pub fn run(args: &Args) -> Result<(), Box<dyn error::Error>> {
+    let input = File::open(&args.input)?;
+    let output = &args.output;
+    let compressor = &args.compressor;
+    match args.decompress {
+        true => compressor.decompress(&input, output),
+        false => compressor.compress(&input, output),
+    }
+}
 
 #[derive(StructOpt)]
 pub struct Args {
