@@ -1,10 +1,10 @@
-use byteorder::{WriteBytesExt, LE};
+use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
 
 pub struct LZW;
 
 impl super::Compressor for LZW {
-    fn compress(&self, input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn encode(&self, input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
         let mut current = String::new();
         let mut next = 257;
@@ -24,7 +24,20 @@ impl super::Compressor for LZW {
         Ok(())
     }
 
-    fn decompress(&self, input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn decode(&self, mut input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+        let mut dict = LZW::init_rev_dict();
+        let mut prev = String::new();
+        let mut next = 257;
+        while let Ok(integer) = input.read_u32::<LE>() {
+            let current = &dict.get(&integer).expect("int not in dictionary").clone();
+            output.write(current.as_bytes())?;
+            if !prev.is_empty() {
+                prev.push(current.as_bytes()[0] as char);
+                dict.insert(next, prev);
+                next += 1;
+            }
+            prev = current.clone();
+        }
         Ok(())
     }
 }
@@ -35,6 +48,15 @@ impl LZW {
         for i in 0..256 {
             let c = i as u8 as char;
             dict.insert(c.to_string(), i);
+        }
+        dict
+    }
+
+    fn init_rev_dict() -> HashMap<u32, String> {
+        let mut dict = HashMap::new();
+        for i in 0..256 {
+            let c = i as u8 as char;
+            dict.insert(i, c.to_string());
         }
         dict
     }

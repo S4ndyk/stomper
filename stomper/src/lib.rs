@@ -13,12 +13,12 @@ pub fn run(args: Args) -> Result<(), Box<dyn error::Error>> {
     let output = BufWriter::new(File::create(out_filename)?);
     match args.compressor.as_str() {
         "lzw" => match args.decompress {
-            true => LZW.decompress(input, output),
-            false => LZW.compress(input, output),
+            true => LZW.decode(input, output),
+            false => LZW.encode(input, output),
         },
         "huffman" | "huff" => match args.decompress {
-            true => Huffman.decompress(input, output),
-            false => Huffman.compress(input, output),
+            true => Huffman.decode(input, output),
+            false => Huffman.encode(input, output),
         },
 
         s => {
