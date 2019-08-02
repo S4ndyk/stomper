@@ -1,44 +1,31 @@
 use byteorder::{WriteBytesExt, LE};
-use std::io::{prelude::*, BufReader, BufWriter};
-use std::{collections::HashMap, error, fs::File, path::PathBuf};
+use std::{collections::HashMap, error::Error, io::prelude::*};
 
 pub struct LZW;
 
 impl super::Compressor for LZW {
-    ///Takes file and return path to compressed file
-    fn compress(&self, input: &File) -> Result<PathBuf, Box<dyn error::Error>> {
+    fn compress(&self, input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
-        let path = PathBuf::from("out.stmpd");
-        let mut writer = BufWriter::new(File::create(&path)?);
-        let reader = BufReader::new(input);
-
         let mut current = String::new();
         let mut next = 257;
-        //Iterate over bytes in file
-        for byte in reader.bytes() {
-            //Turn byte to char
+        for byte in input.bytes() {
             let c = byte? as char;
-            //Build string
             current.push(c);
-
-            //If string not in dictionary
             if let None = dict.get(&current) {
-                //Insert string to dictionary
                 dict.insert(current.clone(), next);
                 next += 1;
                 current.pop();
                 let code = dict.get(&current).unwrap();
-                //write out unsigned 32 bit int as 4 bytes in little endian
-                writer.write_u32::<LE>(*code)?;
+                output.write_u32::<LE>(*code)?;
                 current = c.to_string();
             }
         }
-        writer.write_u32::<LE>(*dict.get(&current).unwrap())?;
-        Ok(path)
+        output.write_u32::<LE>(*dict.get(&current).unwrap())?;
+        Ok(())
     }
 
-    fn decompress(&self, i: &File) -> Result<PathBuf, Box<dyn error::Error>> {
-        Ok(PathBuf::from("temp"))
+    fn decompress(&self, input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>> {
+        Ok(())
     }
 }
 

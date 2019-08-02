@@ -1,14 +1,13 @@
 use std::error::Error;
-use std::fs::File;
-use std::path::PathBuf;
+use std::io::prelude::*;
 
 pub struct Huffman;
 
 impl super::Compressor for Huffman {
-    fn compress(&self, input: &File) -> Result<PathBuf, Box<dyn Error>> {
-        Ok(PathBuf::from("temp"))
+    fn compress(&self, input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>> {
+        Ok(())
     }
-    fn decompress(&self, input: &File) -> Result<PathBuf, Box<dyn Error>> {
-        Ok(PathBuf::from("temp"))
+    fn decompress(&self, input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>> {
+        Ok(())
     }
 }
