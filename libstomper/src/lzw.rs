@@ -29,7 +29,12 @@ impl super::Compressor for LZW {
         let mut prev = String::new();
         let mut next = 257;
         while let Ok(integer) = input.read_u32::<LE>() {
-            let current = &dict.get(&integer).expect("int not in dictionary").clone();
+            if let None = dict.get(&integer) {
+                let mut clone = prev.clone();
+                clone.push(prev.as_bytes()[0] as char);
+                dict.insert(integer, clone);
+            }
+            let current = dict.get(&integer).unwrap().clone();
             output.write(current.as_bytes())?;
             if !prev.is_empty() {
                 prev.push(current.as_bytes()[0] as char);
