@@ -9,7 +9,7 @@ impl super::Compressor for LZW {
         let mut current = String::new();
         let mut next = 257;
         for byte in input.bytes() {
-            let c = byte? as char;
+            let c = byte.unwrap() as char;
             current.push(c);
             if let None = dict.get(&current) {
                 dict.insert(current.clone(), next);
@@ -31,17 +31,18 @@ impl super::Compressor for LZW {
         while let Ok(integer) = input.read_u32::<LE>() {
             if let None = dict.get(&integer) {
                 let mut clone = prev.clone();
-                clone.push(prev.as_bytes()[0] as char);
+                clone.push(char_at(&prev, 0));
                 dict.insert(integer, clone);
             }
             let current = dict.get(&integer).unwrap().clone();
             output.write(current.as_bytes())?;
             if !prev.is_empty() {
-                prev.push(current.as_bytes()[0] as char);
-                dict.insert(next, prev);
+                let mut clone = prev.clone();
+                clone.push(char_at(&current, 0));
+                dict.insert(next, clone);
                 next += 1;
             }
-            prev = current.clone();
+            prev = current;
         }
         Ok(())
     }
@@ -65,6 +66,10 @@ impl LZW {
         }
         dict
     }
+}
+
+fn char_at(s: &String, index: usize) -> char {
+    s.as_bytes()[index] as char
 }
 
 #[cfg(test)]
