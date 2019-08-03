@@ -4,7 +4,7 @@ use std::{collections::HashMap, error::Error, io::prelude::*};
 pub struct LZW;
 
 impl super::Compressor for LZW {
-    fn encode(&self, input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn encode(input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
         let mut current = String::new();
         let mut next = 257;
@@ -24,7 +24,7 @@ impl super::Compressor for LZW {
         Ok(())
     }
 
-    fn decode(&self, mut input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_rev_dict();
         let mut prev = String::new();
         let mut next = 257;
