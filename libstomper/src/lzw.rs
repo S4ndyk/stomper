@@ -1,9 +1,13 @@
+//! Implementation of the Ziv-Lempel-Welch algorithm
+//! Right now data is encoded with 32-bit dictionary in little endian.
+//! This might change later to 24-bit
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
 
 pub struct LZW;
 
 impl super::Compressor for LZW {
+    /// Encodes data with Lempel-Ziv-Welch compression.
     fn encode(input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
         let mut current = String::new();
@@ -24,6 +28,7 @@ impl super::Compressor for LZW {
         Ok(())
     }
 
+    /// Decodes data with Lempel-Ziv-Welch compression.
     fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_rev_dict();
         let mut prev = String::new();
@@ -49,6 +54,7 @@ impl super::Compressor for LZW {
 }
 
 impl LZW {
+    /// initializes dictionary for encoding
     fn init_dict() -> HashMap<String, u32> {
         let mut dict = HashMap::new();
         for i in 0..256 {
@@ -58,6 +64,7 @@ impl LZW {
         dict
     }
 
+    /// initializes dictionary for decoding
     fn init_rev_dict() -> HashMap<u32, String> {
         let mut dict = HashMap::new();
         for i in 0..256 {
@@ -68,6 +75,7 @@ impl LZW {
     }
 }
 
+/// returns charatacter from string at index
 fn char_at(s: &String, index: usize) -> char {
     s.as_bytes()[index] as char
 }
