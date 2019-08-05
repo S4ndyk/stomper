@@ -9,6 +9,6 @@ pub mod lzw;
 
 /// Defines functions compression algorithms must implement
 pub trait Compressor {
-    fn encode(input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>>;
-    fn decode(input: impl Read, output: impl Write) -> Result<(), Box<dyn Error>>;
+    fn encode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>>;
+    fn decode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>>;
 }

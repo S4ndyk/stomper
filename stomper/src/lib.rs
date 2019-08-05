@@ -9,22 +9,22 @@ use structopt::StructOpt;
 
 /// Runs program
 pub fn run(args: Args) -> Result<(), Box<dyn error::Error>> {
-    let input = BufReader::new(File::open(args.input)?);
+    let mut input = BufReader::new(File::open(args.input)?);
     // Choose where to write encoded/decoded data
     // Defaults as output.stmpd if no argrument given
     let out_filename = args.output.unwrap_or(PathBuf::from("output.stmpd"));
-    let output = BufWriter::new(File::create(out_filename)?);
+    let mut output = BufWriter::new(File::create(out_filename)?);
 
     // Chooses the type of compression based on args.compressor
     // Return error if no match is found
     match args.compressor.as_str() {
         "lzw" => match args.decompress {
-            true => LZW::decode(input, output),
-            false => LZW::encode(input, output),
+            true => LZW::decode(&mut input, &mut output),
+            false => LZW::encode(&mut input, &mut output),
         },
         "huffman" | "huff" => match args.decompress {
-            true => Huffman::decode(input, output),
-            false => Huffman::encode(input, output),
+            true => Huffman::decode(&mut input, &mut output),
+            false => Huffman::encode(&mut input, &mut output),
         },
 
         s => {

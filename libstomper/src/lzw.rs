@@ -1,4 +1,5 @@
 //! Implementation of the Ziv-Lempel-Welch algorithm
+//!
 //! Right now data is encoded with 32-bit dictionary in little endian.
 //! This might change later to 24-bit
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
@@ -8,7 +9,7 @@ pub struct LZW;
 
 impl super::Compressor for LZW {
     /// Encodes data with Lempel-Ziv-Welch compression.
-    fn encode(input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn encode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
         let mut current = String::new();
         let mut next = 257;
@@ -29,7 +30,7 @@ impl super::Compressor for LZW {
     }
 
     /// Decodes data with Lempel-Ziv-Welch compression.
-    fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), Box<dyn Error>> {
+    fn decode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_rev_dict();
         let mut prev = String::new();
         let mut next = 257;
@@ -41,6 +42,7 @@ impl super::Compressor for LZW {
             }
             let current = dict.get(&integer).unwrap().clone();
             output.write(current.as_bytes())?;
+            println!("WRITING: {}", current);
             if !prev.is_empty() {
                 let mut clone = prev.clone();
                 clone.push(char_at(&current, 0));
@@ -49,6 +51,7 @@ impl super::Compressor for LZW {
             }
             prev = current;
         }
+        println!("ENDED WRITING!!!");
         Ok(())
     }
 }
@@ -82,7 +85,45 @@ fn char_at(s: &String, index: usize) -> char {
 
 #[cfg(test)]
 mod tests {
+    use super::super::Compressor;
     use super::LZW;
+    use std::error::Error;
+    use std::fs::File;
+    use std::io::{prelude::*, SeekFrom};
+    use tempfile::*;
+
+    #[test]
+    fn decomp_and_orig_are_same() {
+        let mut testfile = File::open("testfiles/small.txt").unwrap();
+        let mut comp = tempfile().unwrap();
+        let mut decomp = tempfile().unwrap();
+
+        LZW::encode(&mut testfile, &mut comp).unwrap();
+        comp.seek(SeekFrom::Start(0)).unwrap();
+        LZW::decode(&mut comp, &mut decomp).unwrap();
+
+        let mut decomp_content = String::new();
+        let mut testfile_content = String::new();
+
+        decomp.seek(SeekFrom::Start(0)).unwrap();
+        testfile.seek(SeekFrom::Start(0)).unwrap();
+
+        decomp.read_to_string(&mut decomp_content).unwrap();
+        testfile.read_to_string(&mut testfile_content).unwrap();
+
+        assert_eq!(testfile_content, decomp_content);
+    }
+
+    #[test]
+    #[ignore]
+    fn compressed_file_is_smaller() {
+        let mut testfile = File::open("testfiles/big.txt").unwrap();
+        let mut compressed = tempfile().unwrap();
+        LZW::encode(&mut testfile, &mut compressed).unwrap();
+        let testfile_meta = testfile.metadata().unwrap();
+        let compressed_meta = compressed.metadata().unwrap();
+        assert!(compressed_meta.len() < testfile_meta.len());
+    }
 
     #[test]
     fn dict_has_corresponding_character() {
@@ -97,7 +138,4 @@ mod tests {
         assert_eq!(dict.get(&s2), Some(&num2));
         assert_eq!(dict.get(&s3), Some(&num3));
     }
-
-    #[test]
-    fn compress() {}
 }
