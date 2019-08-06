@@ -42,7 +42,6 @@ impl super::Compressor for LZW {
             }
             let current = dict.get(&integer).unwrap().clone();
             output.write(current.as_bytes())?;
-            println!("WRITING: {}", current);
             if !prev.is_empty() {
                 let mut clone = prev.clone();
                 clone.push(char_at(&current, 0));
@@ -51,7 +50,6 @@ impl super::Compressor for LZW {
             }
             prev = current;
         }
-        println!("ENDED WRITING!!!");
         Ok(())
     }
 }
@@ -87,7 +85,6 @@ fn char_at(s: &String, index: usize) -> char {
 mod tests {
     use super::super::Compressor;
     use super::LZW;
-    use std::error::Error;
     use std::fs::File;
     use std::io::{prelude::*, SeekFrom};
     use tempfile::*;
