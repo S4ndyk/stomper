@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn decomp_and_orig_are_same() {
-        let mut testfile = File::open("testfiles/small.txt").unwrap();
+        let mut testfile = File::open("../testfiles/small.txt").unwrap();
         let mut comp = tempfile().unwrap();
         let mut decomp = tempfile().unwrap();
 
@@ -114,7 +114,7 @@ mod tests {
     #[test]
     #[ignore]
     fn compressed_file_is_smaller() {
-        let mut testfile = File::open("testfiles/big.txt").unwrap();
+        let mut testfile = File::open("../testfiles/big.txt").unwrap();
         let mut compressed = tempfile().unwrap();
         LZW::encode(&mut testfile, &mut compressed).unwrap();
         let testfile_meta = testfile.metadata().unwrap();
