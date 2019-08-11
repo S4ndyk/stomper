@@ -8,6 +8,7 @@ cache: cargo
 addons:
   apt:
     packages:
+      - kcov
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
@@ -19,7 +20,6 @@ addons:
 # run builds for all the trains (and more)
 rust:
   - nightly
-  - beta
   - stable
 
 before_script:
