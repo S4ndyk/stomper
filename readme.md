@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/S4ndyk/stomper.svg?branch=master)](https://travis-ci.org/S4ndyk/stomper)
-Readme
+[![Coverage Status](https://coveralls.io/repos/github/S4ndyk/stomper/badge.svg)](https://coveralls.io/github/S4ndyk/stomper)
+
+Stomper
 ===
 **Dokumentaatio**
 * [Määrittely](/documentation/maaritelma.md)
