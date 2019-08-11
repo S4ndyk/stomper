@@ -1,4 +1,4 @@
-//! Frontend for stomper compression tool. See [libstomper](../libstomper/index.html) for implemented algorithms
+//! Frontend for stomper compression tool. See [libstomper](https://docs.rs/libstomper/0.1.0/libstomper/) for implemented algorithms
 //!
 use libstomper::{huffman::Huffman, lzw::LZW, Compressor};
 use std::error;
