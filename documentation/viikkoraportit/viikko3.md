@@ -2,7 +2,8 @@ Viikko 3
 ===
 
 Useamman tunnin säätämisen jälkeen sain pystyyn travis ci ja coveralls.
-Nyt testikattavauutta pääsee tarkastelemaan sieltä. Ohjelman ydinauleet eivät ole edenneet tällä viikolla
+Nyt testikattavauutta pääsee tarkastelemaan sieltä. Lisäksi dokumentaatiota voi nyt tarkastella docs.rs:ssä.
+Ohjelman ydinauleet eivät ole edenneet tällä viikolla
 mutta tulevalla viikolla tarkoitkuseni on parantaa lzw algoritmia siten että se käyttäisi 24-bitin koodausta.
 Aion myös korjata bugin jossa koodaus ei toimi kun tiedosto on liian iso. Aion myös laajentaa testausta
 _frontendin_ puolelle ja testata lzw kattavammin.

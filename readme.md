@@ -5,6 +5,8 @@ Stomper
 ===
 **Dokumentaatio**
 * [Määrittely](/documentation/maaritelma.md)
+* [stomper documentaatio](https://docs.rs/stomper/)
+* [libstomper dokumentaatio](https://docs.rs/libstomper/)
 
 **Viikkoraportit**
 * [Viikko 1](/documentation/viikkoraportit/viikko1.md)
