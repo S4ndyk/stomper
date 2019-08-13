@@ -5,6 +5,8 @@
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
 
+static MAX: u32 = 16777216;
+
 pub struct LZW;
 
 impl super::Compressor for LZW {
@@ -21,11 +23,15 @@ impl super::Compressor for LZW {
                 next += 1;
                 current.pop();
                 let code = dict.get(&current).unwrap();
-                output.write_u32::<LE>(*code)?;
+                output.write_u24::<LE>(*code)?;
                 current = c.to_string();
             }
+            if next >= MAX {
+                dict = LZW::init_dict();
+                next = 257;
+            }
         }
-        output.write_u32::<LE>(*dict.get(&current).unwrap())?;
+        output.write_u24::<LE>(*dict.get(&current).unwrap())?;
         Ok(())
     }
 
@@ -34,7 +40,7 @@ impl super::Compressor for LZW {
         let mut dict = LZW::init_rev_dict();
         let mut prev = String::new();
         let mut next = 257;
-        while let Ok(integer) = input.read_u32::<LE>() {
+        while let Ok(integer) = input.read_u24::<LE>() {
             if let None = dict.get(&integer) {
                 let mut clone = prev.clone();
                 clone.push(char_at(&prev, 0));
@@ -49,6 +55,11 @@ impl super::Compressor for LZW {
                 next += 1;
             }
             prev = current;
+
+            if next >= MAX {
+                dict = LZW::init_rev_dict();
+                next = 257;
+            }
         }
         Ok(())
     }
@@ -112,7 +123,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn compressed_file_is_smaller() {
         let mut testfile = File::open("../testfiles/big.txt").unwrap();
         let mut compressed = tempfile().unwrap();
