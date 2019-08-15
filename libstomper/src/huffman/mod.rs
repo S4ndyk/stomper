@@ -39,7 +39,7 @@ impl Huffman {
             let ch = *key;
             huffmantree.push(Box::new(Node::new_leaf(prob, ch)));
         }
-        while huffmantree.capacity() > 1 {
+        while huffmantree.len() > 1 {
             let left = huffmantree.pop().unwrap();
             let right = huffmantree.pop().unwrap();
             let prob = left.prob + right.prob;
@@ -48,4 +48,31 @@ impl Huffman {
         }
         huffmantree
     }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::Huffman;
+    use std::error::Error;
+
+    #[test]
+    fn huffmantree_builds_correctly() -> Result<(), Box<dyn Error>> {
+        let test_string = String::from("ABAABC");
+        let mut huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
+        assert_eq!(huffman_tree.len(), 1);
+        let root = huffman_tree.pop().expect("huffmantree has no root");
+        let a = root.left.expect("Node does not exist");
+        let nochar = root.right.expect("Node does not exist");
+        let b = nochar.right.expect("Node does not exist");
+        let c = nochar.left.expect("Node does not exist");
+        assert_eq!(a.character, 'A');
+        assert_eq!(b.character, 'B');
+        assert_eq!(c.character, 'C');
+        assert_eq!(a.prob, 3);
+        assert_eq!(b.prob, 2);
+        assert_eq!(c.prob, 1);
+        Ok(())
+    }
+
 }

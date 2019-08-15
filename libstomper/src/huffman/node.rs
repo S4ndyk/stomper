@@ -6,6 +6,7 @@
 use std::cmp::Ordering;
 
 ///Represent a node in Huffman tree
+#[derive(Debug)]
 pub struct Node {
     pub prob: u32,
     pub character: char,
