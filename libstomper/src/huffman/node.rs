@@ -1,5 +1,11 @@
+//! Node struct used in huffman tree implementation.
+//! Node is a recursive struct it should usually be used in boxed context.
+//! A nodes children is represented with Option<Box<Node>> where None denotes the lack of children
+//! Nodes are ordered in reverse order. See Ord and Eq implementatios below
+
 use std::cmp::Ordering;
 
+///Represent a node in Huffman tree
 pub struct Node {
     pub prob: u32,
     pub character: char,
@@ -8,6 +14,7 @@ pub struct Node {
 }
 
 impl Node {
+    ///Builds a new leaf node(i.e node with no children)
     pub fn new_leaf(prob: u32, character: char) -> Self {
         Node {
             prob,
@@ -16,7 +23,14 @@ impl Node {
             right: None,
         }
     }
-    pub fn new(prob: u32, character: char, left: Option<Box<Node>>, right: Option<Box<Node>>) -> Self {
+
+    ///Builds a new internal node(i.e node with children)
+    pub fn new(
+        prob: u32,
+        character: char,
+        left: Option<Box<Node>>,
+        right: Option<Box<Node>>,
+    ) -> Self {
         Node {
             prob,
             character,
