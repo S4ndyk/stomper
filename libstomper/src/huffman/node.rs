@@ -6,7 +6,7 @@
 use std::cmp::Ordering;
 
 ///Represent a node in Huffman tree
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub prob: u32,
     pub character: char,
@@ -57,5 +57,22 @@ impl PartialOrd for Node {
 impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         self.prob == other.prob && self.character == other.character
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Node;
+
+    #[test]
+    fn nodes_are_in_reverse_order() {
+        let n1 = Node::new_leaf(10, '\0');
+        let n2 = Node::new_leaf(15, '\0');
+        let n3 = Node::new_leaf(20, '\0');
+        let mut v = vec![n2.clone(), n1.clone(), n3.clone()];
+        v.sort();
+        assert_eq!(n3, v[0]);
+        assert_eq!(n2, v[1]);
+        assert_eq!(n1, v[2]);
     }
 }
