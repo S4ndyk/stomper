@@ -57,7 +57,7 @@ mod tests {
     use std::error::Error;
 
     #[test]
-    fn huffmantree_builds_correctly() -> Result<(), Box<dyn Error>> {
+    fn huffmantree_builds_correctly() {
         let test_string = String::from("ABAABC");
         let mut huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
         assert_eq!(huffman_tree.len(), 1);
@@ -72,7 +72,6 @@ mod tests {
         assert_eq!(a.prob, 3);
         assert_eq!(b.prob, 2);
         assert_eq!(c.prob, 1);
-        Ok(())
     }
 
 }
