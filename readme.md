@@ -35,6 +35,6 @@ Ohjelmalle annetaan parametreinä pakkaustapa ja pakattava/purettava tiedosto
 >
 >`cargo run lzw teksti.txt -o pakattu.txt` 
 >
->//purkaa pakattu.txt tiedostoon purettu.txt
+>purkaa pakattu.txt tiedostoon purettu.txt
 >
 >`cargo run lzw pakattu.txt -d -o purettu.txt` 
