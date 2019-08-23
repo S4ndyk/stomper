@@ -13,7 +13,9 @@ impl super::Compressor for Huffman {
     /// Not yet implemented
     #[allow(unused_variables)]
     fn encode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
-        let huffmantree = Huffman::build_hfm_tree(input);
+        let mut huffmantree = Huffman::build_hfm_tree(input);
+        let root = huffmantree.pop().expect("No root node found");
+        let codemap = Huffman::build_code_map(root);
         Ok(())
     }
 
@@ -48,13 +50,30 @@ impl Huffman {
         }
         huffmantree
     }
+
+    fn build_code_map(root: Box<Node>) -> HashMap<u8, String> {
+        let mut code_map = HashMap::new();
+        dfs(root, String::new(), &mut code_map);
+        code_map
+    }
+
+}
+
+fn dfs(node: Box<Node>, code: String, code_map: &mut HashMap<u8, String>) {
+    if let Some(left) = node.left {
+        dfs(left, code.clone() + "0", code_map);
+    }
+    if let Some(right) = node.right {
+        dfs(right, code.clone() + "1", code_map);
+    }
+    if node.character != NOCHAR {
+        code_map.insert(node.character as u8, code);
+    };
 }
 
 #[cfg(test)]
 mod tests {
-
     use super::Huffman;
-    use std::error::Error;
 
     #[test]
     fn huffmantree_builds_correctly() {
@@ -72,6 +91,20 @@ mod tests {
         assert_eq!(a.prob, 3);
         assert_eq!(b.prob, 2);
         assert_eq!(c.prob, 1);
+    }
+
+    #[test]
+    fn code_map_builds_correctly() {
+        let test_string = String::from("ABAABC");
+        let mut huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
+        let root = huffman_tree.pop().expect("Root node does not exist");
+        let code_map = Huffman::build_code_map(root);
+        let a = code_map.get(&('A' as u8)).expect("A is not in code map");
+        let b = code_map.get(&('B' as u8)).expect("B is not in code map");
+        let c = code_map.get(&('C' as u8)).expect("C is not in code map");
+        assert_eq!(a, "0");
+        assert_eq!(b, "11");
+        assert_eq!(c, "10");
     }
 
 }
