@@ -1,7 +1,6 @@
 //! Implementation of the Ziv-Lempel-Welch algorithm
 //!
-//! Right now data is encoded with 32-bit dictionary in little endian.
-//! This might change later to 24-bit
+//! Right now data is encoded with 24-bit dictionary in little endian.
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
 
