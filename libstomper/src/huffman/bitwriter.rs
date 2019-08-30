@@ -54,7 +54,7 @@ impl <W: Write> BitWriter<W> {
         }
     }
 
-    /// Flushes and rerturns inner writer 
+    /// Flushes and returns inner writer 
     fn to_inner(mut self) -> W {
         self.flush();
         self.writer
