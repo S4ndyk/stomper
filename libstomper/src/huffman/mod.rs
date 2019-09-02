@@ -1,7 +1,10 @@
 use std::collections::{BinaryHeap, HashMap};
 use std::error::Error;
 use std::io::prelude::*;
+use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 mod node;
+mod bitwriter;
+mod bitreader;
 
 use node::Node;
 
@@ -27,7 +30,7 @@ impl super::Compressor for Huffman {
 }
 
 impl Huffman {
-    fn build_hfm_tree(input: &mut Read) -> BinaryHeap<Box<Node>> {
+    fn build_hfm_tree(input: &mut dyn Read) -> BinaryHeap<Box<Node>> {
         let mut frequencies: HashMap<char, u32> = HashMap::new();
         let mut huffmantree = BinaryHeap::new();
         for byte in input.bytes() {
@@ -56,7 +59,49 @@ impl Huffman {
         dfs(root, String::new(), &mut code_map);
         code_map
     }
+}
 
+fn write_tree(root: Box<Node>, writer: &mut impl Write) -> Result<(), Box<dyn Error>> {
+        writer.write_u32::<LE>(root.prob)?;
+        writer.write_u8(root.character as u8)?;
+        if let Some(node) = root.left {
+            writer.write_u8(1)?;
+            write_tree(node, writer)?;
+        } else {
+            writer.write_u8(0)?;
+        }
+
+        if let Some(node) = root.right {
+            writer.write_u8(1)?;
+            write_tree(node, writer)?;
+        } else {
+            writer.write_u8(0)?;
+        }
+        Ok(())
+}
+
+fn read_tree(reader: &mut impl Read) -> Result<Option<Box<Node>>, Box<dyn Error>> {
+    let prob = reader.read_u32::<LE>()?;
+    let character = reader.read_u8()? as char;
+    let left = match reader.read_u8()? {
+        0 => None,
+        _i => read_tree(reader)?,
+    };
+
+    let right = match reader.read_u8()? {
+        0 => None,
+        _i => read_tree(reader)?,
+    };
+    Ok(
+        Some(
+            Box::new (Node {
+                prob,
+                character,
+                left: left,
+                right: right,
+            })
+        )
+    )
 }
 
 fn dfs(node: Box<Node>, code: String, code_map: &mut HashMap<u8, String>) {
@@ -68,12 +113,15 @@ fn dfs(node: Box<Node>, code: String, code_map: &mut HashMap<u8, String>) {
     }
     if node.character != NOCHAR {
         code_map.insert(node.character as u8, code);
-    };
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Huffman;
+    use std::error::Error;
+    use tempfile::*;
+    use std::io::{prelude::*, SeekFrom};
 
     #[test]
     fn huffmantree_builds_correctly() {
@@ -107,4 +155,17 @@ mod tests {
         assert_eq!(c, "10");
     }
 
+    #[test]
+    fn tree_writes_correctly_no1() -> Result<(), Box<dyn Error>>{
+        let test_string = String::from("ABAABC");
+        let huffman_tree1 = Huffman::build_hfm_tree(&mut test_string.as_bytes()).pop().unwrap();
+        let h1 = format!("{:?}", Some(&huffman_tree1));
+        let mut temp = tempfile().unwrap();
+        super::write_tree(huffman_tree1, &mut temp)?;
+        temp.seek(SeekFrom::Start(0))?;    
+        let huffman_tree2 = super::read_tree(&mut temp)?;
+        let h2 = format!("{:?}", &huffman_tree2);
+        assert_eq!(h1, h2);
+        Ok(())
+    }
 }
