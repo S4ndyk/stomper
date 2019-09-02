@@ -4,7 +4,7 @@
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
 
-static MAX: u32 = 16777216;
+ const MAX: u32 = 16777216;
 
 pub struct LZW;
 
@@ -100,7 +100,7 @@ mod tests {
     use tempfile::*;
 
     #[test]
-    fn decomp_and_orig_are_same() {
+    fn decomp_and_orig_are_same_no1() {
         let mut testfile = File::open("../testfiles/small.txt").unwrap();
         let mut comp = tempfile().unwrap();
         let mut decomp = tempfile().unwrap();
@@ -122,6 +122,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn compressed_file_is_smaller() {
         let mut testfile = File::open("../testfiles/big.txt").unwrap();
         let mut compressed = tempfile().unwrap();
