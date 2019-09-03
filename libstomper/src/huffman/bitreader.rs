@@ -122,7 +122,7 @@ mod tests {
         }
         let mut bits_read = 0;
         let mut reader = BitReader::new(v.as_slice());
-        while let Some(bit) = reader.next_bit() {
+        while let Some(_bit) = reader.next_bit() {
             bits_read += 1;
         }
         assert_eq!(bits, bits_read);
