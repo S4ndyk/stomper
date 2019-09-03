@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 structopt = "0.2.18"
-libstomper = "0.1.0"
+libstomper = {path = "../libstomper"}
 
 [package.metadata.docs.rs]
 doc-args = [ "--no-deps" ]

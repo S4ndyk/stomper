@@ -10,7 +10,7 @@ pub struct BitWriter<W: Write>{
 }
 
 impl <W: Write> BitWriter<W> {
-    fn new(writer: W) -> Self {
+    pub fn new(writer: W) -> Self {
         BitWriter {
             writer,
             buffer: [0; BUFFER_SIZE],
@@ -36,7 +36,7 @@ impl <W: Write> BitWriter<W> {
         }
     } 
 
-    fn flush(&mut self) {
+    pub fn flush(&mut self) {
         self.writer.write_all(&self.buffer).expect("Could not write to all to writer");
         self.bitpos = 0;
         self.bytecount = 0;
@@ -55,6 +55,7 @@ impl <W: Write> BitWriter<W> {
     }
 
     /// Flushes and returns inner writer 
+    #[allow(dead_code)]
     fn to_inner(mut self) -> W {
         self.flush();
         self.writer

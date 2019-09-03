@@ -11,7 +11,7 @@ pub struct BitReader<R: Read> {
 }
 
 impl <R: Read> BitReader<R> {
-    fn new(reader: R) -> Self {
+    pub fn new(reader: R) -> Self {
         let mut bitreader = BitReader {
             reader,
             buffer: [0; BUFFER_SIZE],
@@ -23,12 +23,12 @@ impl <R: Read> BitReader<R> {
         bitreader
     } 
 
-    fn next_bit(&mut self) -> Option<bool> {
+    pub fn next_bit(&mut self) -> Option<bool> {
         if self.bytecount > BUFFER_SIZE - 1 {
             self.read_to_buffer();
         }
 
-        if self.bytecount == self.end {
+        if self.bytecount == self.end  && self.read_to_buffer() == 0 {
             return None
         };
 
@@ -110,5 +110,21 @@ mod tests {
         assert_eq!(reader.next_bit(), Some(false));
 
         assert_eq!(reader.next_bit(), None) 
+    }
+
+    #[test]
+    fn reader_reads_till_end() {
+        let mut v: Vec<u8> = Vec::new();
+        let bytes = 20000; 
+        let bits = bytes * 8;
+        for _i in 0..bytes {
+            v.push(21);
+        }
+        let mut bits_read = 0;
+        let mut reader = BitReader::new(v.as_slice());
+        while let Some(bit) = reader.next_bit() {
+            bits_read += 1;
+        }
+        assert_eq!(bits, bits_read);
     }
 }

@@ -4,9 +4,6 @@
 //! Nodes are ordered in reverse order. See Ord and Eq implementatios below
 
 use std::cmp::Ordering;
-use byteorder::{ReadBytesExt, WriteBytesExt, LE};
-use std::io::{Write, Read};
-use std::error::Error;
 
 ///Represent a node in Huffman tree
 #[derive(Debug, Clone)]

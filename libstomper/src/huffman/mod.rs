@@ -1,11 +1,14 @@
 use std::collections::{BinaryHeap, HashMap};
 use std::error::Error;
+use std::io::{Seek, SeekFrom};
 use std::io::prelude::*;
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 mod node;
 mod bitwriter;
 mod bitreader;
 
+use bitwriter::BitWriter;
+use bitreader::BitReader;
 use node::Node;
 
 pub struct Huffman;
@@ -13,18 +16,47 @@ pub struct Huffman;
 static NOCHAR: char = '\0';
 
 impl super::Compressor for Huffman {
-    /// Not yet implemented
-    #[allow(unused_variables)]
-    fn encode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
+    fn encode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
+        let bytes = input.seek(SeekFrom::End(0))?;
+        input.seek(SeekFrom::Start(0))?;
         let mut huffmantree = Huffman::build_hfm_tree(input);
+        input.seek(SeekFrom::Start(0))?;
         let root = huffmantree.pop().expect("No root node found");
+        write_tree(&root, output)?;
+        output.write_u64::<LE>(bytes)?;
         let codemap = Huffman::build_code_map(root);
+        let mut bitwriter = BitWriter::new(output); 
+        for ch in input.bytes() {
+            let code = codemap.get(&ch?).expect("No such code in codemap");
+            bitwriter.write_string(code.clone());
+        }
+        bitwriter.flush();
         Ok(())
     }
 
-    /// Not yet implemented
-    #[allow(unused_variables)]
-    fn decode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
+    fn decode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
+        let root = read_tree(input)?.expect("No root node found");
+        let chars = input.read_u64::<LE>()?;
+        let mut bitreader = BitReader::new(input); 
+        let mut node = &root;
+        let mut charcount = 0;
+        while let Some(bit) = bitreader.next_bit() {
+            if charcount >= chars {
+                break;
+            }
+            node = match bit {
+                true => &node.right.as_ref().unwrap(),
+                false => &node.left.as_ref().unwrap(),
+            };
+
+
+            if node.left == None && node.right == None {
+                charcount += 1;
+                output.write_u8(node.character as u8)?; 
+                node = &root;
+            }
+
+        };
         Ok(())
     }
 }
@@ -61,19 +93,19 @@ impl Huffman {
     }
 }
 
-fn write_tree(root: Box<Node>, writer: &mut impl Write) -> Result<(), Box<dyn Error>> {
+fn write_tree(root: &Box<Node>, writer: &mut impl Write) -> Result<(), Box<dyn Error>> {
         writer.write_u32::<LE>(root.prob)?;
         writer.write_u8(root.character as u8)?;
-        if let Some(node) = root.left {
+        if let Some(node) = &root.left {
             writer.write_u8(1)?;
-            write_tree(node, writer)?;
+            write_tree(&node, writer)?;
         } else {
             writer.write_u8(0)?;
         }
 
-        if let Some(node) = root.right {
+        if let Some(node) = &root.right {
             writer.write_u8(1)?;
-            write_tree(node, writer)?;
+            write_tree(&node, writer)?;
         } else {
             writer.write_u8(0)?;
         }
@@ -119,8 +151,10 @@ fn dfs(node: Box<Node>, code: String, code_map: &mut HashMap<u8, String>) {
 #[cfg(test)]
 mod tests {
     use super::Huffman;
+    use super::super::Compressor;
     use std::error::Error;
     use tempfile::*;
+    use std::fs::File;
     use std::io::{prelude::*, SeekFrom};
 
     #[test]
@@ -156,16 +190,38 @@ mod tests {
     }
 
     #[test]
-    fn tree_writes_correctly_no1() -> Result<(), Box<dyn Error>>{
+    fn tree_writes_and_reads_correctly_no1() -> Result<(), Box<dyn Error>>{
         let test_string = String::from("ABAABC");
         let huffman_tree1 = Huffman::build_hfm_tree(&mut test_string.as_bytes()).pop().unwrap();
         let h1 = format!("{:?}", Some(&huffman_tree1));
         let mut temp = tempfile().unwrap();
-        super::write_tree(huffman_tree1, &mut temp)?;
+        super::write_tree(&huffman_tree1, &mut temp)?;
         temp.seek(SeekFrom::Start(0))?;    
         let huffman_tree2 = super::read_tree(&mut temp)?;
         let h2 = format!("{:?}", &huffman_tree2);
         assert_eq!(h1, h2);
         Ok(())
+    }
+
+    #[test]
+    fn original_and_decompressed_are_same() {
+        let mut testfile = File::open("../testfiles/small.txt").unwrap();
+        let mut comp = tempfile().unwrap();
+        let mut decomp = tempfile().unwrap();
+
+        Huffman::encode(&mut testfile, &mut comp).unwrap();
+        comp.seek(SeekFrom::Start(0)).unwrap();
+        Huffman::decode(&mut comp, &mut decomp).unwrap();
+
+        let mut decomp_content = String::new();
+        let mut testfile_content = String::new();
+
+        decomp.seek(SeekFrom::Start(0)).unwrap();
+        testfile.seek(SeekFrom::Start(0)).unwrap();
+
+        decomp.read_to_string(&mut decomp_content).unwrap();
+        testfile.read_to_string(&mut testfile_content).unwrap();
+
+        assert_eq!(testfile_content, decomp_content);
     }
 }

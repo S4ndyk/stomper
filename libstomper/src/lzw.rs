@@ -10,7 +10,7 @@ pub struct LZW;
 
 impl super::Compressor for LZW {
     /// Encodes data with Lempel-Ziv-Welch compression.
-    fn encode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
+    fn encode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_dict();
         let mut current = String::new();
         let mut next = 257;
@@ -35,7 +35,7 @@ impl super::Compressor for LZW {
     }
 
     /// Decodes data with Lempel-Ziv-Welch compression.
-    fn decode(input: &mut impl Read, output: &mut impl Write) -> Result<(), Box<dyn Error>> {
+    fn decode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
         let mut dict = LZW::init_rev_dict();
         let mut prev = String::new();
         let mut next = 257;
