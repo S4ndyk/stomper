@@ -16,7 +16,7 @@ pub trait Compressor {
 #[cfg(test)]
 mod tests {
     use std::fs::File;
-    use std::io::{prelude::*, SeekFrom};
+    use std::io::{prelude::*};
     use tempfile::*;
     use super::huffman::Huffman;
     use super::Compressor;
