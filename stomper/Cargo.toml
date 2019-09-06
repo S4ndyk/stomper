@@ -2,7 +2,7 @@
 name = "stomper"
 description = "Compression tool written in rust"
 license = "MIT"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Santtu Lempinen <santtu.lempinen@helsinki.fi>"]
 edition = "2018"
 
