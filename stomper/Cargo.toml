@@ -13,4 +13,4 @@ structopt = "0.2.18"
 libstomper = {path = "../libstomper"}
 
 [package.metadata.docs.rs]
-doc-args = [ "--no-deps" ]
+doc-args = [ "--no-deps", "--document-private-items" ]

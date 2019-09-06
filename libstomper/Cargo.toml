@@ -16,4 +16,4 @@ collections = {path = "../collections"}
 tempfile = "3"       
 
 [package.metadata.docs.rs]
-doc-args = [ "--no-deps" ]
+doc-args = [ "--no-deps", "--document-private-items" ]

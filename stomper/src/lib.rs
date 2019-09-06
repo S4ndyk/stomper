@@ -61,17 +61,17 @@ fn choose_compression<R, W>(comp: &str, decomp: bool, inp: &mut R, out: &mut W) 
     Ok(())
 }
 
-/// Struct for command-line arguments collected with structopt crate
 #[derive(StructOpt)]
 pub struct Args {
+    /// Flag for decompressing
     #[structopt(short, long)]
     pub decompress: bool,
-
+    /// Supported compressors: lzw, huffman
     pub compressor: String,
-
+    /// Path to file
     #[structopt(parse(from_os_str))]
     pub input: PathBuf,
-
+    /// Optional name of output file
     #[structopt(short, long)]
     pub output: Option<PathBuf>,
 }

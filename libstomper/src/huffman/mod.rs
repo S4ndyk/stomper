@@ -21,6 +21,7 @@ pub struct Huffman;
 static NOCHAR: char = '\0';
 
 impl super::Compressor for Huffman {
+    /// encode data with huffman code
     fn encode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
         // Save number of characters to be encoded
         let bytes = input.seek(SeekFrom::End(0))?;
@@ -47,6 +48,7 @@ impl super::Compressor for Huffman {
         Ok(())
     }
 
+    /// decode data with huffman code
     fn decode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
         // Decode huffman tree
         let root = read_tree(input)?.expect("No root node found");
@@ -80,6 +82,7 @@ impl super::Compressor for Huffman {
 }
 
 impl Huffman {
+    /// builds the huffman tree
     fn build_hfm_tree(input: &mut dyn Read) -> Box<Node> {
         let mut frequencies: HashMap<char, u32> = HashMap::new();
         let mut huffmantree = BinaryHeap::new();
@@ -157,6 +160,7 @@ fn read_tree(reader: &mut impl Read) -> Result<Option<Box<Node>>, Box<dyn Error>
     )
 }
 
+/// depth first search
 fn dfs(node: Box<Node>, code: String, code_map: &mut HashMap<u8, String>) {
     if let Some(left) = node.left {
         dfs(left, code.clone() + "0", code_map);
