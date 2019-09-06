@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 structopt = "0.2.18"
-libstomper = {path = "../libstomper"}
+libstomper = "0.2.0"
 
 [package.metadata.docs.rs]
 doc-args = [ "--no-deps", "--document-private-items" ]
