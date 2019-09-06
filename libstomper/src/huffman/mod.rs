@@ -1,7 +1,12 @@
+//! Implementation of huffman coding
+//! 
+//! This implementation has large overhead. The huffman-tree is written with to writer in a very verbose way
+//! so that it is much larger than necessary. Other than that this implementation is a true huffman coding with
+//! no unnecessary bits. This is done by writing each individual bit one by one.
+
 use std::collections::{BinaryHeap, HashMap};
 use std::error::Error;
-use std::io::{Seek, SeekFrom};
-use std::io::prelude::*;
+use std::io::{Seek, SeekFrom, prelude::*};
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 mod node;
 mod bitwriter;
@@ -17,14 +22,22 @@ static NOCHAR: char = '\0';
 
 impl super::Compressor for Huffman {
     fn encode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
+        // Save number of characters to be encoded
         let bytes = input.seek(SeekFrom::End(0))?;
+
+        // Build huffman-tree
         input.seek(SeekFrom::Start(0))?;
-        let mut huffmantree = Huffman::build_hfm_tree(input);
+        let huffmantree = Huffman::build_hfm_tree(input);
+
+        // Write out huffman-tree to file
         input.seek(SeekFrom::Start(0))?;
-        let root = huffmantree.pop().expect("No root node found");
-        write_tree(&root, output)?;
+        write_tree(&huffmantree, output)?;
+
+        // Write out number of characters to be encoded
         output.write_u64::<LE>(bytes)?;
-        let codemap = Huffman::build_code_map(root);
+
+        // Encode character till end of input
+        let codemap = Huffman::build_code_map(huffmantree);
         let mut bitwriter = BitWriter::new(output); 
         for ch in input.bytes() {
             let code = codemap.get(&ch?).expect("No such code in codemap");
@@ -35,8 +48,13 @@ impl super::Compressor for Huffman {
     }
 
     fn decode<R: Read + Seek, W: Write + Seek>(input: &mut R, output: &mut W) -> Result<(), Box<dyn Error>> {
+        // Decode huffman tree
         let root = read_tree(input)?.expect("No root node found");
+
+        // Get number of characters to decode
         let chars = input.read_u64::<LE>()?;
+
+        // Decode chars amount of characters
         let mut bitreader = BitReader::new(input); 
         let mut node = &root;
         let mut charcount = 0;
@@ -62,7 +80,7 @@ impl super::Compressor for Huffman {
 }
 
 impl Huffman {
-    fn build_hfm_tree(input: &mut dyn Read) -> BinaryHeap<Box<Node>> {
+    fn build_hfm_tree(input: &mut dyn Read) -> Box<Node> {
         let mut frequencies: HashMap<char, u32> = HashMap::new();
         let mut huffmantree = BinaryHeap::new();
         for byte in input.bytes() {
@@ -83,9 +101,10 @@ impl Huffman {
             let parent = Node::new(prob, NOCHAR, Some(left), Some(right));
             huffmantree.push(Box::new(parent));
         }
-        huffmantree
+        huffmantree.pop().unwrap()
     }
 
+    /// Maps characters to corresponding huffman code
     fn build_code_map(root: Box<Node>) -> HashMap<u8, String> {
         let mut code_map = HashMap::new();
         dfs(root, String::new(), &mut code_map);
@@ -93,6 +112,7 @@ impl Huffman {
     }
 }
 
+/// Uses depth-first search to write a graph to file;
 fn write_tree(root: &Box<Node>, writer: &mut impl Write) -> Result<(), Box<dyn Error>> {
         writer.write_u32::<LE>(root.prob)?;
         writer.write_u8(root.character as u8)?;
@@ -112,6 +132,7 @@ fn write_tree(root: &Box<Node>, writer: &mut impl Write) -> Result<(), Box<dyn E
         Ok(())
 }
 
+/// Uses depth first search to read tree to memory
 fn read_tree(reader: &mut impl Read) -> Result<Option<Box<Node>>, Box<dyn Error>> {
     let prob = reader.read_u32::<LE>()?;
     let character = reader.read_u8()? as char;
@@ -160,9 +181,7 @@ mod tests {
     #[test]
     fn huffmantree_builds_correctly() {
         let test_string = String::from("ABAABC");
-        let mut huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
-        assert_eq!(huffman_tree.len(), 1);
-        let root = huffman_tree.pop().expect("huffmantree has no root");
+        let root = Huffman::build_hfm_tree(&mut test_string.as_bytes());
         let a = root.left.expect("Node does not exist");
         let nochar = root.right.expect("Node does not exist");
         let b = nochar.right.expect("Node does not exist");
@@ -178,9 +197,8 @@ mod tests {
     #[test]
     fn code_map_builds_correctly() {
         let test_string = String::from("ABAABC");
-        let mut huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
-        let root = huffman_tree.pop().expect("Root node does not exist");
-        let code_map = Huffman::build_code_map(root);
+        let huffman_tree = Huffman::build_hfm_tree(&mut test_string.as_bytes());
+        let code_map = Huffman::build_code_map(huffman_tree);
         let a = code_map.get(&('A' as u8)).expect("A is not in code map");
         let b = code_map.get(&('B' as u8)).expect("B is not in code map");
         let c = code_map.get(&('C' as u8)).expect("C is not in code map");
@@ -192,7 +210,7 @@ mod tests {
     #[test]
     fn tree_writes_and_reads_correctly_no1() -> Result<(), Box<dyn Error>>{
         let test_string = String::from("ABAABC");
-        let huffman_tree1 = Huffman::build_hfm_tree(&mut test_string.as_bytes()).pop().unwrap();
+        let huffman_tree1 = Huffman::build_hfm_tree(&mut test_string.as_bytes());
         let h1 = format!("{:?}", Some(&huffman_tree1));
         let mut temp = tempfile().unwrap();
         super::write_tree(&huffman_tree1, &mut temp)?;
@@ -204,8 +222,8 @@ mod tests {
     }
 
     #[test]
-    fn original_and_decompressed_are_same() {
-        let mut testfile = File::open("../testfiles/small.txt").unwrap();
+    fn original_and_decompressed_are_same_no1() {
+        let mut testfile = File::open("../testfiles/small1.txt").unwrap();
         let mut comp = tempfile().unwrap();
         let mut decomp = tempfile().unwrap();
 
@@ -223,5 +241,37 @@ mod tests {
         testfile.read_to_string(&mut testfile_content).unwrap();
 
         assert_eq!(testfile_content, decomp_content);
+    }
+
+    #[test]
+    fn decomp_and_orig_are_same_no2() {
+        let mut testfile = File::open("../testfiles/small2.txt").unwrap();
+        let mut comp = tempfile().unwrap();
+        let mut decomp = tempfile().unwrap();
+
+        Huffman::encode(&mut testfile, &mut comp).unwrap();
+        comp.seek(SeekFrom::Start(0)).unwrap();
+        Huffman::decode(&mut comp, &mut decomp).unwrap();
+
+        let mut decomp_content = String::new();
+        let mut testfile_content = String::new();
+
+        decomp.seek(SeekFrom::Start(0)).unwrap();
+        testfile.seek(SeekFrom::Start(0)).unwrap();
+
+        decomp.read_to_string(&mut decomp_content).unwrap();
+        testfile.read_to_string(&mut testfile_content).unwrap();
+
+        assert_eq!(testfile_content, decomp_content);
+    }
+
+    #[test]
+    fn compressed_file_is_smaller() {
+        let mut testfile = File::open("../testfiles/big1.txt").unwrap();
+        let mut compressed = tempfile().unwrap();
+        Huffman::encode(&mut testfile, &mut compressed).unwrap();
+        let testfile_meta = testfile.metadata().unwrap();
+        let compressed_meta = compressed.metadata().unwrap();
+        assert!(compressed_meta.len() < testfile_meta.len());
     }
 }

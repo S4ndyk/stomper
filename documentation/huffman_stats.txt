@@ -1,0 +1,12 @@
+
+big1.txt: 1191463 bytes
+comp1: 668769 bytes
+56.1% of original
+
+big2.txt: 6488666 bytes
+comp2: 3684503 bytes
+56.8% of original
+
+big3.txt: 704175 bytes
+comp3: 397977 bytes
+56.5% of original

@@ -2,4 +2,7 @@
 members = [
     "stomper",
     "libstomper",
+    "collections",
 ]
+
+

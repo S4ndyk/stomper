@@ -1,3 +1,5 @@
+//! Tool for writing inidividual bits to a writer
+
 use std::io::Write;
 
 const BUFFER_SIZE: usize = 128;
@@ -19,7 +21,8 @@ impl <W: Write> BitWriter<W> {
         }
     } 
 
-    fn write_bit(&mut self, set_bit: bool) {
+    /// Writes over the next bit in the stream.
+    pub fn write_bit(&mut self, set_bit: bool) {
         if set_bit {
             let mask = 1 << self.bitpos;
             let byte = self.buffer[self.bytecount];
@@ -30,12 +33,13 @@ impl <W: Write> BitWriter<W> {
             self.bitpos = 0;
             self.bytecount += 1;
         }
-
+        // Flushes buffer if it is full
         if self.bytecount > BUFFER_SIZE - 1 {
             self.flush();
         }
     } 
 
+    /// Writes remaining
     pub fn flush(&mut self) {
         self.writer.write_all(&self.buffer).expect("Could not write to all to writer");
         self.bitpos = 0;
@@ -43,14 +47,19 @@ impl <W: Write> BitWriter<W> {
         self.buffer = [0; BUFFER_SIZE];
     }
 
+    /// Writes given string as individual bits.
+    /// panics if s contains characters other than 0 and 1
     pub fn write_string(&mut self, s: String) {
         for c in s.bytes() {
             if c as char == '1' {
                 self.write_bit(true);
+                continue;
             }
             if c as char == '0' {
                 self.write_bit(false);
+                continue;
             }
+            panic!("String contains characters other than 0 or 1");
         }
     }
 

@@ -1,0 +1,12 @@
+
+orig1: 1191463 bytes
+comp1: 685854 bytes
+57.6% of original
+
+orig2: 6488666 bytes
+comp2: 2978583 bytes
+45.9% of original
+
+orig3: 704175 bytes
+comp3: 393990 bytes
+56.0% of original

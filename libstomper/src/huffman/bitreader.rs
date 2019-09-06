@@ -1,3 +1,5 @@
+//! Tool for reading bits one by one from stream
+
 use std::io::Read;
 
 const BUFFER_SIZE: usize = 128;
@@ -11,6 +13,8 @@ pub struct BitReader<R: Read> {
 }
 
 impl <R: Read> BitReader<R> {
+
+    /// Returns new bitreader and takes ownership of given reader
     pub fn new(reader: R) -> Self {
         let mut bitreader = BitReader {
             reader,
@@ -23,11 +27,14 @@ impl <R: Read> BitReader<R> {
         bitreader
     } 
 
+    /// Return next bit in the stream and None reached end of file. True represent 1 and false 0
     pub fn next_bit(&mut self) -> Option<bool> {
+        // Read more bytes if buffer is full
         if self.bytecount > BUFFER_SIZE - 1 {
             self.read_to_buffer();
         }
 
+        // Returns none if reached EOF
         if self.bytecount == self.end  && self.read_to_buffer() == 0 {
             return None
         };
@@ -46,6 +53,7 @@ impl <R: Read> BitReader<R> {
         }
     }    
 
+    /// Reads bytes from the underlying reader to buffer
     fn read_to_buffer(&mut self) -> usize {
         self.end = self.reader.read(&mut self.buffer).expect("Could not read to buffer");
         self.bytecount = 0;

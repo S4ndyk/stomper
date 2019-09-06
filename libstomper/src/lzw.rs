@@ -1,10 +1,10 @@
 //! Implementation of the Ziv-Lempel-Welch algorithm
 //!
-//! Right now data is encoded with 24-bit dictionary in little endian.
+//! Data is encoded with 24-bit dictionary in little endian.
+
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
 use std::{collections::HashMap, error::Error, io::prelude::*};
-
- const MAX: u32 = 16777216;
+const MAX: u32 = 16777216;
 
 pub struct LZW;
 
@@ -101,7 +101,29 @@ mod tests {
 
     #[test]
     fn decomp_and_orig_are_same_no1() {
-        let mut testfile = File::open("../testfiles/small.txt").unwrap();
+        let mut testfile = File::open("../testfiles/small1.txt").unwrap();
+        let mut comp = tempfile().unwrap();
+        let mut decomp = tempfile().unwrap();
+
+        LZW::encode(&mut testfile, &mut comp).unwrap();
+        comp.seek(SeekFrom::Start(0)).unwrap();
+        LZW::decode(&mut comp, &mut decomp).unwrap();
+
+        let mut decomp_content = String::new();
+        let mut testfile_content = String::new();
+
+        decomp.seek(SeekFrom::Start(0)).unwrap();
+        testfile.seek(SeekFrom::Start(0)).unwrap();
+
+        decomp.read_to_string(&mut decomp_content).unwrap();
+        testfile.read_to_string(&mut testfile_content).unwrap();
+
+        assert_eq!(testfile_content, decomp_content);
+    }
+
+    #[test]
+    fn decomp_and_orig_are_same_no2() {
+        let mut testfile = File::open("../testfiles/small2.txt").unwrap();
         let mut comp = tempfile().unwrap();
         let mut decomp = tempfile().unwrap();
 
@@ -124,7 +146,7 @@ mod tests {
     #[test]
     #[ignore]
     fn compressed_file_is_smaller() {
-        let mut testfile = File::open("../testfiles/big.txt").unwrap();
+        let mut testfile = File::open("../testfiles/big1.txt").unwrap();
         let mut compressed = tempfile().unwrap();
         LZW::encode(&mut testfile, &mut compressed).unwrap();
         let testfile_meta = testfile.metadata().unwrap();
