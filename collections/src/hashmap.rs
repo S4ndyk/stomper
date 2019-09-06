@@ -16,26 +16,28 @@ impl <K: Hash + PartialEq, V> HashMap<K, V> {
         }
     }
 
-    pub fn insert(&mut self, key: K, value: V) {
+    pub fn insert(&mut self, key: K, _value: V) {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash_value = hasher.finish() as usize % DEFAULT_SIZE;
         
-        let first_entry = self.inner.get_mut(hash_value);
+        let _first_entry = self.inner.get_mut(hash_value);
 
     }
 
-    pub fn get(self, key: K) -> Option<V> {
+    pub fn get(self, _key: K) -> Option<V> {
         None
     }
 }
 
+#[allow(dead_code)]
 struct HashMapEntry<K: PartialEq, V> {
     key: K,
     value: V,
     next: Option<Box<HashMapEntry<K, V>>>,
 }
 
+#[allow(dead_code)]
 impl <K: PartialEq, V> HashMapEntry<K, V> {
     fn new(key: K, value: V) -> Self {
         HashMapEntry {
