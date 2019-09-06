@@ -3,28 +3,52 @@
 use libstomper::{huffman::Huffman, lzw::LZW, Compressor};
 use std::error;
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::{BufReader, BufWriter, Error, ErrorKind};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
 /// Runs program
 pub fn run(args: Args) -> Result<(), Box<dyn error::Error>> {
-    let mut input = BufReader::new(File::open(args.input)?);
     // Choose where to write encoded/decoded data
-    // Defaults as output.stmpd if no argrument given
-    let out_filename = args.output.unwrap_or(PathBuf::from("output.stmpd"));
+    // Defaults as output.[compressor].[comp/decomp] if no argrument given
+    let mut input = BufReader::new(File::open(&args.input)?);
+    let out_filename = if let Some(path) = args.output {
+        path
+    } else {
+        if !args.input.is_file() {
+            return Err(Box::new(Error::new(ErrorKind::InvalidInput, "input is not a file")));
+        }
+        let mut default = PathBuf::new();
+        let compressor = &args.compressor;
+        let decompress = if args.decompress {
+            "decomp"
+        } else {
+            "comp"
+        };
+        default.set_file_name(format!("stomped.{}.{}",compressor, decompress));
+        default
+    };
+    
     let mut output = BufWriter::new(File::create(out_filename)?);
-
     // Chooses the type of compression based on args.compressor
     // Return error if no match is found
-    match args.compressor.as_str() {
-        "lzw" => match args.decompress {
-            true => LZW::decode(&mut input, &mut output),
-            false => LZW::encode(&mut input, &mut output),
+    choose_compression(args.compressor.as_str(), args.decompress, &mut input, &mut output)?;
+    Ok(())
+}
+
+fn choose_compression<R, W>(comp: &str, decomp: bool, inp: &mut R, out: &mut W) -> Result<(), Box<dyn error::Error>>
+    where R: Read + Seek,
+          W: Write + Seek 
+          {
+    match comp {
+        "lzw" => match decomp {
+            true => LZW::decode(inp, out),
+            false => LZW::encode(inp, out),
         },
-        "huffman" | "huff" => match args.decompress {
-            true => Huffman::decode(&mut input, &mut output),
-            false => Huffman::encode(&mut input, &mut output),
+        "huffman" | "huff" => match decomp{
+            true => Huffman::decode(inp, out),
+            false => Huffman::encode(inp, out),
         },
 
         s => {
